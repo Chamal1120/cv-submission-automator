@@ -1,0 +1,15 @@
+[project]
+name = "cv-details-extractor"
+version = "0.1.0"
+description = "A CV details extractor for screening purposes."
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "pypdf2>=3.0.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "black>=25.1.0",
+    "pylint>=3.3.4",
+]
