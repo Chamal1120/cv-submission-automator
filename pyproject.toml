@@ -5,7 +5,7 @@ description = "A CV details extractor for screening purposes."
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
-    "pypdf2>=3.0.1",
+    "pypdf>=5.3.1",
 ]
 
 [project.optional-dependencies]
