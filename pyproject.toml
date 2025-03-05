@@ -5,6 +5,7 @@ description = "A CV details extractor for screening purposes."
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
+    "boto3>=1.37.6",
     "pypdf>=5.3.1",
 ]
 
