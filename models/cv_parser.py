@@ -42,7 +42,7 @@ class CVParser:
         """
 
         if not self.file_path.lower().endswith("pdf"):
-            raise ValueError("File must be in .pdf format")
+            raise ValueError("File must be in .pdf format.")
 
         # Open the pdf
         with open(self.file_path, "rb") as file:

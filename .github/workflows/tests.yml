@@ -1,0 +1,38 @@
+name: CI
+
+# Triggers on push
+on:
+  push:
+    branches:
+    - main
+
+jobs:
+  test:
+
+    # Start an ubuntu  instance
+    runs-on: ubuntu-latest
+
+    steps:
+
+      # Get the code from main
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Setup UV package manager
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      # Setup python3
+      - name: Set up python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: ".python-version"
+
+      # Install the dependancies
+      - name: Install deps
+        run: uv sync --all-extras --dev
+
+      # Run the tests
+      - name: Run tests
+        run: uv run pytest test_app.py
+
