@@ -34,5 +34,5 @@ jobs:
 
       # Run the tests
       - name: Run tests
-        run: uv run pytest test_app.py
+        run: uv run pytest tests/test_cv_parser.py -v
 
