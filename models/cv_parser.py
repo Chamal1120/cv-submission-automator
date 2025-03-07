@@ -4,13 +4,18 @@ import re
 
 def _normalize_text(text):
     """Normalize text extracted from the PDF."""
+
+    # Define the PDF ligature patterns
     ligature_map = {"ﬁ": "fi", "ﬂ": "fl", "ﬀ": "ff", "ﬃ": "ffi", "ﬄ": "ffl"}
+
+    # Replace ligatures wirh normal characters
     for ligature, replacement in ligature_map.items():
         text = text.replace(ligature, replacement)
 
     text = text.replace("\r\n", "\n")
     text = re.sub(r"\s+", " ", text).strip()
 
+    # Define sections headers
     section_headers = [
         "Education",
         "Qualifications",
@@ -18,30 +23,40 @@ def _normalize_text(text):
         "Experience",
         "Skills",
     ]
+
+    # Add newlines to before and after each header
     for header in section_headers:
         text = re.sub(rf"({header}\s*:?)", r"\n\1\n", text, flags=re.IGNORECASE)
 
+    # Return normalized text
     return text
 
 
 def _get_personal_info(pdf_text):
     """Extract personal information from the PDF text."""
+
     personal = {}
+
     name_pattern = r"\b[A-Za-z]+(?:\s+[A-Za-z]+)+\b(?=\s+[\w\.-]+@|\s+\|)"
     name_match = re.search(name_pattern, pdf_text, re.MULTILINE)
     personal["name"] = name_match.group().strip() if name_match else ""
+
     email_pattern = r"[\w\.-]+@[\w\.-]+\.\w+"
     email_match = re.search(email_pattern, pdf_text, re.MULTILINE)
     personal["email"] = email_match.group().strip() if email_match else ""
+
     phone_pattern = r"\+94[\d\s\-\(\)]{9,12}"
     phone_match = re.search(phone_pattern, pdf_text, re.MULTILINE)
     personal["phone"] = phone_match.group().strip() if phone_match else ""
+
     return personal
 
 
 def _get_education(pdf_text):
     """Extract education details from the PDF text."""
+
     education = []
+
     education_pattern = r"(?i)\beducation\b\s*:?\s*([\s\S]+?)(?=\n\s*(qualifications|projects|experience|skills|$))"
     education_match = re.search(education_pattern, pdf_text, re.DOTALL)
     if education_match:
@@ -54,12 +69,15 @@ def _get_education(pdf_text):
             stripped_entry = entry.strip()
             if stripped_entry and re.match(degree_pattern, stripped_entry):
                 education.append(stripped_entry)
+
     return education
 
 
 def _get_qualifications(pdf_text):
     """Extract qualifications from the PDF text."""
+
     qualifications = []
+
     qualifications_pattern = r"(?i)\bqualifications\b\s*:?\s*([\s\S]+?)(?=\n\s*(projects|experience|skills|$))"
     qualifications_match = re.search(qualifications_pattern, pdf_text, re.DOTALL)
     if qualifications_match:
@@ -72,12 +90,15 @@ def _get_qualifications(pdf_text):
             stripped_entry = entry.strip()
             if stripped_entry and re.match(qual_pattern, stripped_entry):
                 qualifications.append(stripped_entry)
+
     return qualifications
 
 
 def _get_projects(pdf_text):
     """Extract projects from the PDF text."""
+
     projects = []
+
     projects_pattern = r"(?i)\bprojects\b\s*:?\s*([\s\S]+)$"
     projects_match = re.search(projects_pattern, pdf_text, re.DOTALL)
     if not projects_match:
@@ -94,6 +115,7 @@ def _get_projects(pdf_text):
             stripped_entry = entry.strip()
             if stripped_entry and re.match(project_pattern, stripped_entry):
                 projects.append(stripped_entry)
+
     return projects
 
 
@@ -108,6 +130,7 @@ def parse_cv_pdf(pdf_text, file_path):
         dict: Parsed CV data including personal info, education, qualifications, projects, and link.
     """
     normalized_text = _normalize_text(pdf_text)
+
     return {
         "personal_info": _get_personal_info(normalized_text),
         "education": _get_education(normalized_text),
@@ -131,6 +154,7 @@ class CVParser:
             if len(reader.pages) > 1:
                 raise ValueError("PDF must be a single page only")
             text = reader.pages[0].extract_text() or ""
+
         return text
 
     def get_cv_data(self):

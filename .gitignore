@@ -1,4 +1,4 @@
-# Python-generated files
+# Python-generated
 __pycache__/
 *.py[oc]
 build/
@@ -6,8 +6,28 @@ dist/
 wheels/
 *.egg-info
 
-# Virtual environments
+# Venvs
 .venv
 
 # Test files
 Test-cv.pdf
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+.terraform.lock.hcl
+crash.log
+*.tfvars
+*.tfvars.json
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+*.tfplan
+*.bak
+*.backup
+
+# Miscellaneous
+.DS_Store  # macOS-specific
+

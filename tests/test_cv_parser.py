@@ -43,7 +43,7 @@ class TestCVParser(unittest.TestCase):
                 "Built a web app using Python and AWS.",
                 "Built a mobile app with server driven UI components.",
             ],
-            "cv_public_link": "s3://my-bucket/Test-cv.pdf",
+            "cv_public_link": "https://my-bucket.s3.amazonaws.com/Test-cv.pdf"
         }
 
         self.expected_empty_output = {
@@ -51,14 +51,14 @@ class TestCVParser(unittest.TestCase):
             "education": [],
             "qualifications": [],
             "projects": [],
-            "cv_public_link": "s3://my-bucket/Test-cv.pdf",
+            "cv_public_link": "https://my-bucket.s3.amazonaws.com/Test-cv.pdf"
         }
 
     # Test parse_cv_pdf directly
     def test_parse_cv_pdf_success(self):
         """Test successful parsing of CV data."""
         self.maxDiff = None
-        result = parse_cv_pdf(self.sample_text, "s3://my-bucket/Test-cv.pdf")
+        result = parse_cv_pdf(self.sample_text, "https://my-bucket.s3.amazonaws.com/Test-cv.pdf")
         self.assertEqual(result, self.expected_output)
 
     # Test lambda_handler
@@ -128,7 +128,7 @@ class TestCVParser(unittest.TestCase):
             "education": [],
             "qualifications": [],
             "projects": [],
-            "cv_public_link": "s3://my-bucket/Test-cv.pdf",
+            "cv_public_link": "https://my-bucket.s3.amazonaws.com/Test-cv.pdf"
         }
         self.assertEqual(result["statusCode"], 200)
         self.assertEqual(result["body"], expected)

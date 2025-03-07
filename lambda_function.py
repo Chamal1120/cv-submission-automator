@@ -48,8 +48,8 @@ def lambda_handler(event, context):
         pdf_text = reader.pages[0].extract_text() or ""
 
         # Format s3 url and parse CV data
-        s3_url = f"s3://{bucket}/{key}"
-        cv_data = parse_cv_pdf(pdf_text, s3_url)
+        public_url = f"https://{bucket}.s3.amazonaws.com/{key}"
+        cv_data = parse_cv_pdf(pdf_text, public_url)
 
         webhook_payload = {
             "cv_data": cv_data,
