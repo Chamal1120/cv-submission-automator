@@ -26,7 +26,7 @@ jobs:
 
       # Install dependencies
       - name: Install Deps
-        run: pip install -r requirements.txt
+        run: pip install -r requirements-dev.txt
 
       # Run the tests
       - name: Run tests
