@@ -1,4 +1,3 @@
-# terraform/main.tf
 terraform {
   required_providers {
     aws = {
@@ -13,7 +12,26 @@ provider "aws" {
   region = var.aws_region
 }
 
-# S3 Bucket for Lambda code and CV storage
+locals {
+  buildspec_lambda = <<EOT
+version: 0.2
+phases:
+  install:
+    runtime-versions:
+      python: 3.12
+    commands:
+      - echo "Installing dependencies..."
+      - python -m venv .venv
+      - source .venv/bin/activate
+      - pip install --upgrade pip
+      - pip install -r requirements.txt
+  build:
+    commands:
+      - zip -r lambda_function.zip . -x "terraform/*" "tests/*" "*.git/*" "__pycache__/" ".github/"
+      - aws lambda update-function-code --function-name CVParserLambda --zip-file fileb://lambda_function.zip
+EOT
+}
+
 resource "aws_s3_bucket" "lambda_bucket" {
   bucket_prefix = "cv-parser-lambda-"
   force_destroy = true
@@ -28,11 +46,19 @@ resource "aws_s3_bucket_ownership_controls" "lambda_bucket_ownership" {
 
 resource "aws_s3_bucket_acl" "lambda_bucket_acl" {
   bucket = aws_s3_bucket.lambda_bucket.id
-  acl    = "private"  # Bucket itself is private, objects are public via policy
+  acl    = "private"
   depends_on = [aws_s3_bucket_ownership_controls.lambda_bucket_ownership]
 }
 
-# Bucket Policy for Public Read Access
+resource "aws_s3_bucket_public_access_block" "lambda_bucket_access" {
+  bucket = aws_s3_bucket.lambda_bucket.id
+
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
+}
+
 resource "aws_s3_bucket_policy" "public_read" {
   bucket = aws_s3_bucket.lambda_bucket.id
   policy = jsonencode({
@@ -46,29 +72,87 @@ resource "aws_s3_bucket_policy" "public_read" {
       }
     ]
   })
+  depends_on = [aws_s3_bucket_public_access_block.lambda_bucket_access]
 }
 
-# Package Lambda with uv
-data "external" "lambda_build" {
-  program = ["bash", "-c", <<EOT
-    mkdir -p lambda_package
-    cp ${path.module}/../lambda_function.py ${path.module}/../models/cv_parser.py lambda_package/
-    uv pip install --python 3.12 -t lambda_package/ --no-deps ${path.module}/../
-    cd lambda_package
-    zip -r ../lambda_function.zip .
-    echo "{\"output_path\": \"${path.module}/lambda_function.zip\", \"md5\": \"$(md5sum ${path.module}/lambda_function.zip | awk '{print $1}')\"}"
-  EOT
-  ]
+resource "aws_iam_role" "codebuild_role" {
+  name = "cv-parser-codebuild-role"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action    = "sts:AssumeRole"
+      Effect    = "Allow"
+      Principal = {
+        Service = "codebuild.amazonaws.com"
+      }
+    }]
+  })
+}
+
+resource "aws_iam_role_policy" "codebuild_policy" {
+  name = "cv-parser-codebuild-policy"
+  role = aws_iam_role.codebuild_role.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents",
+          "s3:PutObject",
+          "s3:GetObject",
+          "s3:ListBucket"
+        ]
+        Resource = [
+          "*",
+          "${aws_s3_bucket.lambda_bucket.arn}/*"
+        ]
+      },
+      {
+        Effect = "Allow"
+          Action = "lambda:UpdateFunctionCode"
+          Resource = "arn:aws:lambda:us-east-1:050752608379:function:CVParserLambda"
+      }
+    ]
+  })
+}
+
+resource "aws_codebuild_project" "lambda_build_project" {
+  name          = "cv-parser-lambda-build"
+  service_role  = aws_iam_role.codebuild_role.arn
+  build_timeout = "10"
+
+  artifacts {
+    type     = "S3"
+    location = aws_s3_bucket.lambda_bucket.bucket
+    packaging = "ZIP"
+    path     = ""
+    name     = "lambda_function.zip"
+  }
+
+  environment {
+    compute_type                = "BUILD_LAMBDA_1GB"
+    image                       = "aws/codebuild/amazonlinux-x86_64-lambda-standard:python3.12"
+    type                        = "LINUX_LAMBDA_CONTAINER"
+    image_pull_credentials_type = "CODEBUILD"
+  }
+
+  source {
+    type            = "GITHUB"
+    location        = "https://github.com/${var.github_owner}/${var.github_repo}.git"
+    git_clone_depth = 1
+    buildspec       = local.buildspec_lambda
+  }
 }
 
 resource "aws_s3_object" "lambda_code" {
   bucket = aws_s3_bucket.lambda_bucket.id
   key    = "lambda_function.zip"
-  source = data.external.lambda_build.result.output_path
-  etag   = data.external.lambda_build.result.md5
+  depends_on = [aws_codebuild_project.lambda_build_project]
 }
 
-# IAM Role for Lambda
 resource "aws_iam_role" "lambda_exec" {
   name = "cv-parser-lambda-role"
   assume_role_policy = jsonencode({
@@ -109,7 +193,6 @@ resource "aws_iam_role_policy" "lambda_policy" {
   })
 }
 
-# Lambda Function
 resource "aws_lambda_function" "cv_parser" {
   function_name    = "CVParserLambda"
   s3_bucket        = aws_s3_bucket.lambda_bucket.id
@@ -117,14 +200,11 @@ resource "aws_lambda_function" "cv_parser" {
   handler          = "lambda_function.lambda_handler"
   runtime          = "python3.12"
   role             = aws_iam_role.lambda_exec.arn
-  source_code_hash = data.external.lambda_build.result.md5
   timeout          = 30
   memory_size      = 256
-
-  depends_on = [aws_s3_object.lambda_code]
+  depends_on       = [aws_s3_object.lambda_code]
 }
 
-# S3 Trigger
 resource "aws_s3_bucket_notification" "lambda_trigger" {
   bucket = aws_s3_bucket.lambda_bucket.id
   lambda_function {
@@ -143,7 +223,6 @@ resource "aws_lambda_permission" "s3_trigger" {
   source_arn    = aws_s3_bucket.lambda_bucket.arn
 }
 
-# IAM Roles for CodePipeline and CodeBuild
 resource "aws_iam_role" "codepipeline_role" {
   name = "cv-parser-codepipeline-role"
   assume_role_policy = jsonencode({
@@ -168,9 +247,9 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
         Effect = "Allow"
         Action = [
           "s3:*",
-          "codecommit:*",
           "codebuild:*",
-          "lambda:*"
+          "lambda:*",
+          "codestar-connections:UseConnection"
         ]
         Resource = "*"
       }
@@ -178,40 +257,6 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
   })
 }
 
-resource "aws_iam_role" "codebuild_role" {
-  name = "cv-parser-codebuild-role"
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Action    = "sts:AssumeRole"
-      Effect    = "Allow"
-      Principal = {
-        Service = "codebuild.amazonaws.com"
-      }
-    }]
-  })
-}
-
-resource "aws_iam_role_policy" "codebuild_policy" {
-  name = "cv-parser-codebuild-policy"
-  role = aws_iam_role.codebuild_role.id
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "logs:*",
-          "s3:*",
-          "codecommit:*"
-        ]
-        Resource = "*"
-      }
-    ]
-  })
-}
-
-# CodeBuild Project for Testing
 resource "aws_codebuild_project" "test_project" {
   name          = "cv-parser-test"
   service_role  = aws_iam_role.codebuild_role.arn
@@ -222,9 +267,9 @@ resource "aws_codebuild_project" "test_project" {
   }
 
   environment {
-    compute_type                = "BUILD_GENERAL1_SMALL"
-    image                       = "aws/codebuild/standard:7.0"
-    type                        = "LINUX_CONTAINER"
+    compute_type                = "BUILD_LAMBDA_1GB"
+    image                       = "aws/codebuild/amazonlinux-x86_64-lambda-standard:python3.12"
+    type                        = "LINUX_LAMBDA_CONTAINER"
     image_pull_credentials_type = "CODEBUILD"
   }
 
@@ -232,11 +277,15 @@ resource "aws_codebuild_project" "test_project" {
     type            = "GITHUB"
     location        = "https://github.com/${var.github_owner}/${var.github_repo}.git"
     git_clone_depth = 1
-    buildspec       = file("${path.module}/buildspec.yml")
+    buildspec       = local.buildspec_lambda
   }
 }
 
-# CodePipeline
+resource "aws_codestarconnections_connection" "github_connection" {
+  name          = "cv-parser-github-connection"
+  provider_type = "GitHub"
+}
+
 resource "aws_codepipeline" "cv_pipeline" {
   name     = "cv-parser-pipeline"
   role_arn = aws_iam_role.codepipeline_role.arn
@@ -252,45 +301,28 @@ resource "aws_codepipeline" "cv_pipeline" {
       name             = "Source"
       category         = "Source"
       owner            = "AWS"
-      provider         = "GitHub"
+      provider         = "CodeStarSourceConnection"
       version          = "1"
       output_artifacts = ["source_output"]
       configuration = {
-        Owner                = var.github_owner
-        Repo                 = var.github_repo
-        Branch               = "main"
-        OAuthToken           = var.github_token
-        PollForSourceChanges = "false"
+        ConnectionArn    = aws_codestarconnections_connection.github_connection.arn
+        FullRepositoryId = "${var.github_owner}/${var.github_repo}"
+        BranchName       = "main"
       }
     }
   }
 
   stage {
-    name = "Test"
+    name = "Build"
     action {
-      name            = "Test"
-      category        = "Test"
+      name            = "Build"
+      category        = "Build"
       owner           = "AWS"
       provider        = "CodeBuild"
       input_artifacts = ["source_output"]
       version         = "1"
       configuration = {
         ProjectName = aws_codebuild_project.test_project.name
-      }
-    }
-  }
-
-  stage {
-    name = "Deploy"
-    action {
-      name            = "Deploy"
-      category        = "Deploy"
-      owner           = "AWS"
-      provider        = "Lambda"
-      input_artifacts = ["source_output"]
-      version         = "1"
-      configuration = {
-        FunctionName = aws_lambda_function.cv_parser.function_name
       }
     }
   }
@@ -311,4 +343,3 @@ resource "aws_codepipeline_webhook" "github_webhook" {
     match_equals = "refs/heads/main"
   }
 }
-
