@@ -14,21 +14,20 @@ provider "aws" {
 
 locals {
   buildspec_lambda = <<EOT
-version: 0.2
-phases:
-  install:
-    runtime-versions:
-      python: 3.12
-    commands:
-      - echo "Installing dependencies..."
-      - python -m venv .venv
-      - source .venv/bin/activate
-      - pip install --upgrade pip
-      - pip install -r requirements.txt
-  build:
-    commands:
-      - zip -r lambda_function.zip . -x "terraform/*" "tests/*" "*.git/*" "__pycache__/" ".github/"
-      - aws lambda update-function-code --function-name CVParserLambda --zip-file fileb://lambda_function.zip
+  version: 0.2
+  phases:
+    install:
+      runtime-versions:
+        python: 3.12
+    build:
+      commands:
+        - cd backend
+        - mkdir package
+        - pip install --target=package -r requirements.txt  # Install dependencies directly into 'package/'
+        - cp -r lambda_function.py models/ package/
+        - cd package
+        - zip -r ../lambda_function.zip .
+        - aws lambda update-function-code --function-name CVParserLambda --zip-file fileb://../lambda_function.zip
 EOT
 }
 

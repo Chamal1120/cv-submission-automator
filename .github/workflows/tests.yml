@@ -26,9 +26,9 @@ jobs:
 
       # Install dependencies
       - name: Install Deps
-        run: pip install -r requirements-dev.txt
+        run: cd backend && pip install -r requirements-dev.txt
 
       # Run the tests
       - name: Run tests
-        run: pytest tests/test_cv_parser.py -v
+        run: cd backend && pytest tests/test_cv_parser.py -v
 
