@@ -2,6 +2,7 @@ import unittest
 from lambda_function import lambda_handler
 from models.cv_parser import parse_cv_pdf
 from unittest.mock import MagicMock, patch
+from io import BytesIO
 
 
 class TestCVParser(unittest.TestCase):
@@ -54,29 +55,46 @@ class TestCVParser(unittest.TestCase):
             "cv_public_link": "https://my-bucket.s3.amazonaws.com/Test-cv.pdf"
         }
 
-    # Test parse_cv_pdf directly
+    # Test parse_cv_pdf directly (Ensure CVParser logic works before
+    # testing it in lambda context)
     def test_parse_cv_pdf_success(self):
         """Test successful parsing of CV data."""
-        self.maxDiff = None
+        self.maxDiff = None  # Show full diff
         result = parse_cv_pdf(self.sample_text, "https://my-bucket.s3.amazonaws.com/Test-cv.pdf")
         self.assertEqual(result, self.expected_output)
 
     # Test lambda_handler
-    @patch("requests.post")
+    @patch("lambda_function.requests.post")
     @patch("lambda_function.s3_client.get_object")
     @patch("pypdf.PdfReader")
     def test_lambda_handler_success(self, mock_reader, mock_s3_get, mock_post):
         """Test Lambda handler with valid S3 event."""
         self.maxDiff = None
+
+        # Instantiate MagicMock
         mock_page = MagicMock()
+
+        # Assign the sample CV text
         mock_page.extract_text.return_value = self.sample_text
+
+        # Simulate a single page PDF
         mock_reader.return_value.pages = [mock_page]
-        mock_s3_get.return_value = {"Body": "dummy file object"}
+
+        # Assign a Body with a .read() method
+        mock_s3_get.return_value = {"Body": MagicMock(read=lambda: self.sample_text.encode('utf=8'))}
+
+        # Simulate successful webhook
         mock_post.return_value.status_code = 200
-        mock_post.return_value.raise_for_status = lambda: None
+
+        # Prevent raising exceptions
+        mock_post.return_value.raise_for_status = MagicMock()
 
         result = lambda_handler(self.s3_event, None)
+
+        # Expect success
         self.assertEqual(result["statusCode"], 200)
+
+        # Expect parsed CV data
         self.assertEqual(result["body"], self.expected_output)
 
     def test_lambda_handler_invalid_format(self):
@@ -101,9 +119,9 @@ class TestCVParser(unittest.TestCase):
     def test_lambda_handler_multi_page(self, mock_reader, mock_s3_get, mock_post):
         """Test Lambda handler with multi-page PDF."""
         mock_reader.return_value.pages = [MagicMock(), MagicMock()]
-        mock_s3_get.return_value = {"Body": "dummy file object"}
+        mock_s3_get.return_value = {"Body": MagicMock(read=lambda: b"PDF content")}
         mock_post.return_value.status_code = 200
-        mock_post.return_value.raise_for_status = lambda: None
+        mock_post.return_value.raise_for_status = MagicMock()
 
         result = lambda_handler(self.s3_event, None)
         self.assertEqual(result["statusCode"], 400)
@@ -118,9 +136,12 @@ class TestCVParser(unittest.TestCase):
         mock_page = MagicMock()
         mock_page.extract_text.return_value = ""
         mock_reader.return_value.pages = [mock_page]
-        mock_s3_get.return_value = {"Body": "dummy file object"}
+
+        # Simate an Empty pdf with a .read() method
+        mock_s3_get.return_value = {"Body": MagicMock(read=lambda: b"")}
+
         mock_post.return_value.status_code = 200
-        mock_post.return_value.raise_for_status = lambda: None
+        mock_post.return_value.raise_for_status = MagicMock()
 
         result = lambda_handler(self.s3_event, None)
         expected = {
