@@ -1,3 +1,4 @@
+# Buidspec for the middleman lmabda 
 locals {
   buildspec_middleman = <<EOT
 version: 0.2
