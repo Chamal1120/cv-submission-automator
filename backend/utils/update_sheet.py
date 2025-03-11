@@ -8,7 +8,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 # Google Sheets API setup
-SERVICE_ACCOUNT_FILE = 'google-credentials.json'
+SERVICE_ACCOUNT_FILE = '../google-credentials.json'
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 SPREADSHEET_ID = '154hmgvVrNS9GxAjLRuYqC8axDdcbjygDG0rJ7GbGRwo'
 SHEET_NAME = 'Sheet1'

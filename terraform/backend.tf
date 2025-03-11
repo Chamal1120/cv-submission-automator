@@ -23,7 +23,7 @@ phases:
     commands:
       - echo "Building backend package"
       - pip install --target=package -r requirements.txt
-      - cp -r lambda_function.py models/ package/
+      - cp -r lambda_function.py models/ utils/ package/
       - cd package
       - zip -r ../lambda_function.zip .
       - cd ..
