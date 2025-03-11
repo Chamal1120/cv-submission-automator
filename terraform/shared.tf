@@ -61,7 +61,7 @@ resource "aws_s3_bucket_cors_configuration" "lambda_bucket_cors" {
   cors_rule {
     allowed_headers = ["*"] 
     allowed_methods = ["PUT"]
-    allowed_origins = ["http://localhost:5173"]
+    allowed_origins = ["http://localhost:5173", "http://cv-parser-frontend-20250311054926886300000001.s3-website-us-east-1.amazonaws.com"]
     expose_headers  = ["ETag"]
     max_age_seconds = 3000
   }
@@ -97,6 +97,17 @@ resource "aws_iam_role_policy" "codebuild_policy" {
           "s3:ListBucket"
         ]
         Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:PutObject",
+          "s3:PutObjectAcl"
+        ]
+        Resource = [
+          "${aws_s3_bucket.lambda_bucket.arn}/*",
+          "${aws_s3_bucket.frontend_bucket.arn}/*"
+        ]
       },
       {
         Effect   = "Allow"

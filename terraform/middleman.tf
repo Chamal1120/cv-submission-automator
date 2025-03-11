@@ -30,6 +30,11 @@ resource "aws_lambda_function" "get_presigned_url" {
   memory_size      = 128
   filename         = "../middleman/lambda_get_presigned_url.zip"
   source_code_hash = filebase64sha256("../middleman/lambda_get_presigned_url.zip")
+  environment {
+    variables = {
+      BUCKET_NAME = aws_s3_bucket.lambda_bucket.bucket
+    }
+  }
 }
 
 # API Gateway

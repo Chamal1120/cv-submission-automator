@@ -39,16 +39,16 @@ const UploadForm: React.FC = () => {
   };
 
   const getPresignedUrl = async (file: File): Promise<string> => {
-    const response = await fetch("https://e6p4uim4gb.execute-api.us-east-1.amazonaws.com/prod/get-presigned-url", {
+    const response = await fetch("https://wyspfmmxrk.execute-api.us-east-1.amazonaws.com/prod/get-presigned-url", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ fileName: file.name }),
     });
 
     if (!response.ok) throw new Error("Failed to get presigned URL");
-    const data = await response.json(); // Wait for the JSON to resolve
-    console.log("Presigned URL Response:", data); // Log response data
-    return data.url; // Assuming the API returns { url: "https://s3..." }
+    const data = await response.json();
+    console.log("Presigned URL Response:", data);
+    return data.url;
 
     // return response.json();
   };

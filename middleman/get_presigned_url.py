@@ -1,19 +1,20 @@
 import boto3
 import json
 import logging
+import os
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 s3_client = boto3.client("s3")
-BUCKET_NAME = "cv-parser-lambda-20250308091253290100000001"
+BUCKET_NAME = os.environ["BUCKET_NAME"]
 
 
 def lambda_handler(event, context):
     # Define CORS headers for all responses
     headers = {
         "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Origin": "https://wyspfmmxrk.execute-api.us-east-1.amazonaws.com/prod/get-presigned-url",
         "Access-Control-Allow-Methods": "POST,OPTIONS",
         "Access-Control-Allow-Headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key",
     }

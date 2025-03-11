@@ -6,17 +6,30 @@ phases:
   install:
     runtime-versions:
       python: 3.12
+
+  pre_build:
+    commands:
+      - echo "Navigating to backend folder"
+      - cd backend
+      - echo "Creating package directory"
+      - mkdir -p package
+      - echo "Decrypting credentials..."
+      - aws kms decrypt \
+          --ciphertext-blob fileb://google-credentials.json.encrypted \
+          --output text \
+          --query Plaintext | base64 --decode > ./package/google-credentials.json
+
   build:
     commands:
       - echo "Building backend package"
-      - cd backend
-      - mkdir package
       - pip install --target=package -r requirements.txt
       - cp -r lambda_function.py models/ package/
       - cd package
       - zip -r ../lambda_function.zip .
+      - cd ..
       - echo "Deploying to AWS Lambda"
-      - aws lambda update-function-code --function-name CVParserLambda --zip-file fileb://../lambda_function.zip
+      - aws lambda update-function-code --function-name CVParserLambda --zip-file fileb://lambda_function.zip
+
 EOT
 }
 
@@ -55,6 +68,11 @@ resource "aws_iam_role_policy" "lambda_policy" {
           "s3:PutObject"
         ]
         Resource = "${aws_s3_bucket.lambda_bucket.arn}/*"
+      },
+      {
+        Effect   = "Allow"
+        Action   = "ses:SendEmail"
+        Resource = "*"
       }
     ]
   })

@@ -6,17 +6,24 @@ import json
 import logging
 from io import BytesIO
 from models.cv_parser import parse_cv_pdf
+from utils.mailService import send_review_email
+from utils.updatesheet import (
+    get_google_sheets_service,
+    create_or_get_spreadsheet,
+    append_cv_details
+)
 
-# Configure logging explicitly
+# Configure logging
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
+# Initiate s3 client
 s3_client = boto3.client("s3")
+
 
 # Webhook endpoint
 WEBHOOK_URL = "https://rnd-assignment.automations-3d6.workers.dev/"
-
-# Candidate email for verifications
+# My Candidate email for assignment verification
 CANDIDATE_EMAIL = "chamal.randika.mcr@gmail.com"
 
 
@@ -44,7 +51,7 @@ def lambda_handler(event, context):
 
         # Download the PDF from S3 to memory
         response = s3_client.get_object(Bucket=bucket, Key=key)
-        pdf_file = BytesIO(response["Body"].read())  # Fix: Make it seekable
+        pdf_file = BytesIO(response["Body"].read())
         logger.info("Downloaded PDF from S3")
 
         # Read PDF content
@@ -61,7 +68,17 @@ def lambda_handler(event, context):
         # Format s3 url and parse CV data
         public_url = f"https://{bucket}.s3.amazonaws.com/{key}"
         cv_data = parse_cv_pdf(pdf_text, public_url)
+        candidate_email = cv_data.get("personal_info", {}).get("email")
         logger.info(f"Parsed CV data: {json.dumps(cv_data)}")
+
+        # Initialize Google Sheets service
+        sheets_service = get_google_sheets_service()
+
+        # Get or create the Google Sheets file
+        spreadsheet_id = create_or_get_spreadsheet(sheets_service)
+
+        # Append the CV data to the sheet
+        append_cv_details(sheets_service, spreadsheet_id, cv_data)
 
         webhook_payload = {
             "cv_data": cv_data,
@@ -85,6 +102,8 @@ def lambda_handler(event, context):
         )
         response.raise_for_status()
         logger.info(f"Webhook sent successfully. Response: {response.status_code} - {response.text}")
+        send_review_email(candidate_email)
+        logger.info("CV processing completed successfully")
         return {"statusCode": 200, "body": cv_data}
 
     except requests.RequestException as re:
