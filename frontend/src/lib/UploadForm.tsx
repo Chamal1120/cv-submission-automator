@@ -1,5 +1,11 @@
 import { useState } from "react";
 
+const sanitizeFileName = (fileName: string): string => {
+  return fileName
+    .replace(/[^a-zA-Z0-9.-_]/g, '_')
+    .toLowerCase();
+};
+
 const UploadForm: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
   const [dragging, setDragging] = useState<boolean>(false);
@@ -14,8 +20,14 @@ const UploadForm: React.FC = () => {
   const handleFileSelection = (selectedFile: File | null) => {
     if (!selectedFile) return;
 
-    if (allowedTypes.includes(selectedFile.type)) {
-      setFile(selectedFile);
+    // Sanitize the file name
+    const sanitizedFileName = sanitizeFileName(selectedFile.name);
+
+    // Update the file state with sanitized name
+    const sanitizedFile = new File([selectedFile], sanitizedFileName, { type: selectedFile.type });
+
+    if (allowedTypes.includes(sanitizedFile.type)) {
+      setFile(sanitizedFile);
     } else {
       alert("Please select a valid PDF.");
     }

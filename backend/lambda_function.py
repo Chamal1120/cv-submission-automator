@@ -85,7 +85,7 @@ def lambda_handler(event, context):
             "metadata": {
                 "applicant_name": cv_data["personal_info"]["name"] or "Unknown",
                 "email": cv_data["personal_info"]["email"] or "unkown@email.com",
-                "status": "testing",  # Use "testing" fow now
+                "status": "prod",
                 "cv_processed": True,
                 "processed_timestamp": datetime.now(timezone.utc).isoformat(),
             },
@@ -130,3 +130,4 @@ def lambda_handler(event, context):
     except Exception as e:
         logger.error(f"Lambda execution failed: {str(e)}")
         return {"statusCode": 500, "body": {"error": str(e)}}
+

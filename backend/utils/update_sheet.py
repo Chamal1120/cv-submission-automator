@@ -1,3 +1,4 @@
+import os
 import logging
 from datetime import datetime, timezone
 from google.oauth2 import service_account
@@ -7,8 +8,14 @@ from googleapiclient.discovery import build
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
+# Get the absolute path of the root dir
+root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+
+# Construct the full path to the google-credentials.json
+credentials_path = os.path.join(root_dir, 'google-credentials.json')
+
 # Google Sheets API setup
-SERVICE_ACCOUNT_FILE = '../google-credentials.json'
+SERVICE_ACCOUNT_FILE = credentials_path
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 SPREADSHEET_ID = '154hmgvVrNS9GxAjLRuYqC8axDdcbjygDG0rJ7GbGRwo'
 SHEET_NAME = 'Sheet1'
@@ -41,9 +48,9 @@ def append_cv_details(service, spreadsheet_id, cv_data):
         [
             cv_data["personal_info"].get("name", ""),
             cv_data["personal_info"].get("email", ""),
-            "; ".join(cv_data.get("education", [])),
-            "; ".join(cv_data.get("qualifications", [])),
-            "; ".join(cv_data.get("projects", [])),
+            "\n\n".join(cv_data.get("education", [])),
+            "\n\n".join(cv_data.get("qualifications", [])),
+            "\n\n".join(cv_data.get("projects", [])),
             cv_data.get("cv_public_link", ""),
             datetime.now(timezone.utc).isoformat()
         ]
