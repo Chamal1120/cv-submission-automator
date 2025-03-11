@@ -7,7 +7,7 @@ CV submission automater is a job application processing pipeline developed for t
 5. Sending a `processing done` response to the recruting company
 6. And sending a follow up email back to the candidate
 
-# Tech Stack
+## Tech Stack
 
 1. Frontend - React (bootsrapped with vite)
 2. Backend - Python (Lambda function)
@@ -18,7 +18,7 @@ CV submission automater is a job application processing pipeline developed for t
 7. VCS - Git and Github
 8. Testing - Pytest, Vitest (WIP)
 
-# Deployment Instructions
+## Deployment Instructions
 
 #### Prerequisites
 
@@ -40,6 +40,7 @@ KMSAccessCustom
 
 ##### Codestar custom inline policy
 ```
+{
 	"Version": "2012-10-17",
 	"Statement": [
 		{
@@ -112,12 +113,15 @@ zip -r ..//lambda_get_presigned_url.zip && cd ..
 ```
 
 2. Go to terraform dir and create the variables.tfvars file as follows:
+
+```txt
 # terraform.tfvars
 aws_region           = "preffered-region"
 github_owner         = "github-user-name-of-the-git-repo"
 github_repo          = "fork's-name"
 github_token         = "gh-PAT-token"
 github_webhook_secret = "put-a-unique-password-here"
+```
 
 2. Init terraform:
 ```bash
@@ -138,4 +142,4 @@ terraform apply "tfplan"
 git push -u origin main
 ```
 
-#### Thank You
+## Thank You
