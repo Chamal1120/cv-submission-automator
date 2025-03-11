@@ -136,6 +136,7 @@ resource "aws_codebuild_project" "backend_build" {
 # CodePipeline for CVParserLambda
 resource "aws_codepipeline" "cv_pipeline" {
   name     = "cv-parser-pipeline"
+  pipeline_type = "V2"
   role_arn = aws_iam_role.codepipeline_role.arn
 
   artifact_store {

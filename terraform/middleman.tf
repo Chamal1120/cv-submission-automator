@@ -178,6 +178,7 @@ resource "aws_codebuild_project" "middleman_build" {
 # CodePipeline for Middleman
 resource "aws_codepipeline" "middleman_pipeline" {
   name     = "middleman-pipeline"
+  pipeline_type = "V2"
   role_arn = aws_iam_role.codepipeline_role.arn
   artifact_store {
     location = aws_s3_bucket.lambda_bucket.bucket

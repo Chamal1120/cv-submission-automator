@@ -101,6 +101,7 @@ resource "aws_codebuild_project" "frontend_build" {
 # CodePipeline for Frontend
 resource "aws_codepipeline" "frontend_pipeline" {
   name     = "cv-parser-frontend-pipeline"
+  pipeline_type = "V2"
   role_arn = aws_iam_role.codepipeline_role.arn
   artifact_store {
     location = aws_s3_bucket.lambda_bucket.bucket
