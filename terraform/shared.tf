@@ -12,6 +12,9 @@ provider "aws" {
   region = var.aws_region
 }
 
+
+data "aws_caller_identity" "current" {}
+
 # S3 Bucket
 resource "aws_s3_bucket" "lambda_bucket" {
   bucket_prefix = "cv-parser-lambda-"
@@ -112,7 +115,7 @@ resource "aws_iam_role_policy" "codebuild_policy" {
       {
         Effect   = "Allow"
         Action   = "lambda:UpdateFunctionCode"
-        Resource = "arn:aws:lambda:${var.aws_region}:050752608379:function:*"
+        Resource = "arn:aws:lambda:${var.aws_region}:${data.aws_caller_identity.current.account_id}:function:*"
       }
     ]
   })
