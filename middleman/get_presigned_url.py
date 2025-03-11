@@ -14,7 +14,7 @@ def lambda_handler(event, context):
     # Define CORS headers for all responses
     headers = {
         "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "https://wyspfmmxrk.execute-api.us-east-1.amazonaws.com/prod/get-presigned-url",
+        "Access-Control-Allow-Origin": "http://cv-parser-frontend-20250311054926886300000001.s3-website-us-east-1.amazonaws.com",
         "Access-Control-Allow-Methods": "POST,OPTIONS",
         "Access-Control-Allow-Headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key",
     }
