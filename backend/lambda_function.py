@@ -6,10 +6,10 @@ import json
 import logging
 from io import BytesIO
 from models.cv_parser import parse_cv_pdf
-from utils.mailService import send_review_email
-from utils.updatesheet import (
+from utils.mail_service import send_review_email
+from utils.update_sheet import (
     get_google_sheets_service,
-    create_or_get_spreadsheet,
+    get_spreadsheet,
     append_cv_details
 )
 
@@ -75,7 +75,7 @@ def lambda_handler(event, context):
         sheets_service = get_google_sheets_service()
 
         # Get or create the Google Sheets file
-        spreadsheet_id = create_or_get_spreadsheet(sheets_service)
+        spreadsheet_id = get_spreadsheet(sheets_service)
 
         # Append the CV data to the sheet
         append_cv_details(sheets_service, spreadsheet_id, cv_data)
@@ -102,7 +102,14 @@ def lambda_handler(event, context):
         )
         response.raise_for_status()
         logger.info(f"Webhook sent successfully. Response: {response.status_code} - {response.text}")
-        send_review_email(candidate_email)
+
+        # Send review email if email is present and valid
+        candidate_email = cv_data["personal_info"]["email"]
+        if candidate_email and "@" in candidate_email:
+            send_review_email(candidate_email)
+        else:
+            logger.info("No valid email found; skipping follow up email")
+
         logger.info("CV processing completed successfully")
         return {"statusCode": 200, "body": cv_data}
 

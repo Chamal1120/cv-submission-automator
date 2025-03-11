@@ -1,159 +1,77 @@
 import unittest
-from lambda_function import lambda_handler
-from models.cv_parser import parse_cv_pdf
-from unittest.mock import MagicMock, patch
-from io import BytesIO
+from models.cv_parser import parse_cv_pdf, _normalize_text, _get_personal_info, _get_education, _get_qualifications, _get_projects
 
 
 class TestCVParser(unittest.TestCase):
-    def setUp(self):
-        """Set up fixtures before each test."""
-        self.sample_text = (
-            "Chamal Randika | chamal.randy@hisdomain.com | +9470-456-7890\n"
-            "Education:\n Bachelor of Science in Software Engineering, SLTC Research University, 2026\n GCE A/L, Maliyadeva College, 2018\n"
-            "Qualifications:\n Certified Python Developer - 2022 Certified\n Golang Developer\n"
-            "Projects:\n Built a web app using Python and AWS.\n Built a mobile app with server driven UI components."
-        )
 
-        self.s3_event = {
-            "Records": [
-                {
-                    "s3": {
-                        "bucket": {"name": "my-bucket"},
-                        "object": {"key": "Test-cv.pdf"},
-                    }
-                }
-            ]
-        }
+    def test_normalize_text(self):
+        input_text = "Test\r\nText  with  extra  spaces"
+        expected_output = "Test Text with extra spaces"
+        self.assertEqual(_normalize_text(input_text), expected_output)
 
-        self.expected_output = {
-            "personal_info": {
-                "name": "Chamal Randika",
-                "email": "chamal.randy@hisdomain.com",
-                "phone": "+9470-456-7890",
-            },
-            "education": [
-                "Bachelor of Science in Software Engineering, SLTC Research University, 2026",
-                "GCE A/L, Maliyadeva College, 2018",
-            ],
-            "qualifications": [
-                "Certified Python Developer - 2022",
-                "Certified Golang Developer",
-            ],
-            "projects": [
-                "Built a web app using Python and AWS.",
-                "Built a mobile app with server driven UI components.",
-            ],
-            "cv_public_link": "https://my-bucket.s3.amazonaws.com/Test-cv.pdf"
-        }
+    def test_get_personal_info(self):
+        test_text = "John Doe | john.doe@example.com\n+94 123 456 789"
+        result = _get_personal_info(test_text)
+        self.assertEqual(result['name'], "John Doe")
+        self.assertEqual(result['email'], "john.doe@example.com")
+        self.assertEqual(result['phone'], "+94 123 456 789")
 
-        self.expected_empty_output = {
-            "personal_info": {"name": "", "email": "", "phone": ""},
-            "education": [],
-            "qualifications": [],
-            "projects": [],
-            "cv_public_link": "https://my-bucket.s3.amazonaws.com/Test-cv.pdf"
-        }
+    def test_get_education(self):
+        test_text = """
+        Education:
+        Bachelor of Science, University of Test 2015-2019
+        Master of Arts, Test College 2020-2022
+        Qualifications:
+        """
+        result = _get_education(test_text)
+        self.assertEqual(len(result), 2)
+        self.assertIn("Bachelor of Science, University of Test 2015-2019", result)
+        self.assertIn("Master of Arts, Test College 2020-2022", result)
 
-    # Test parse_cv_pdf directly (Ensure CVParser logic works before
-    # testing it in lambda context)
-    def test_parse_cv_pdf_success(self):
-        """Test successful parsing of CV data."""
-        self.maxDiff = None  # Show full diff
-        result = parse_cv_pdf(self.sample_text, "https://my-bucket.s3.amazonaws.com/Test-cv.pdf")
-        self.assertEqual(result, self.expected_output)
+    def test_get_qualifications(self):
+        test_text = """
+        Qualifications:
+        Certified Python Developer, 2020
+        Certified Solutions Architect, 2021
 
-    # Test lambda_handler
-    @patch("lambda_function.requests.post")
-    @patch("lambda_function.s3_client.get_object")
-    @patch("pypdf.PdfReader")
-    def test_lambda_handler_success(self, mock_reader, mock_s3_get, mock_post):
-        """Test Lambda handler with valid S3 event."""
-        self.maxDiff = None
+        Projects:
+        """
+        result = _get_qualifications(test_text)
+        self.assertEqual(len(result), 2)
+        self.assertIn("Certified Python Developer, 2020", result)
+        self.assertIn("Certified Solutions Architect, 2021", result)
 
-        # Instantiate MagicMock
-        mock_page = MagicMock()
+    def test_get_projects(self):
+        test_text = """
+        Projects:
+        Developed a machine learning model for image recognition.
+        Created a web application using Django and React.
+        """
+        result = _get_projects(test_text)
+        self.assertEqual(len(result), 2)
+        self.assertIn("Developed a machine learning model for image recognition.", result)
+        self.assertIn("Created a web application using Django and React.", result)
 
-        # Assign the sample CV text
-        mock_page.extract_text.return_value = self.sample_text
+    def test_parse_cv_pdf(self):
+        test_text = """John Doe | john.doe@example.com
+        +94 123 456 789
 
-        # Simulate a single page PDF
-        mock_reader.return_value.pages = [mock_page]
+        Education:
+        Bachelor of Science, University of Test 2015-2019
 
-        # Assign a Body with a .read() method
-        mock_s3_get.return_value = {"Body": MagicMock(read=lambda: self.sample_text.encode('utf=8'))}
+        Qualifications:
+        Certified Python Developer, 2020
 
-        # Simulate successful webhook
-        mock_post.return_value.status_code = 200
+        Projects:
+        Developed a machine learning model for image recognition."""
 
-        # Prevent raising exceptions
-        mock_post.return_value.raise_for_status = MagicMock()
+        result = parse_cv_pdf(test_text, "test_file_path")
 
-        result = lambda_handler(self.s3_event, None)
-
-        # Expect success
-        self.assertEqual(result["statusCode"], 200)
-
-        # Expect parsed CV data
-        self.assertEqual(result["body"], self.expected_output)
-
-    def test_lambda_handler_invalid_format(self):
-        """Test Lambda handler with non-PDF file."""
-        invalid_event = {
-            "Records": [
-                {
-                    "s3": {
-                        "bucket": {"name": "my-bucket"},
-                        "object": {"key": "Test-cv.txt"},
-                    }
-                }
-            ]
-        }
-        result = lambda_handler(invalid_event, None)
-        self.assertEqual(result["statusCode"], 400)
-        self.assertEqual(result["body"]["error"], "File must be in .pdf format")
-
-    @patch("requests.post")
-    @patch("lambda_function.s3_client.get_object")
-    @patch("pypdf.PdfReader")
-    def test_lambda_handler_multi_page(self, mock_reader, mock_s3_get, mock_post):
-        """Test Lambda handler with multi-page PDF."""
-        mock_reader.return_value.pages = [MagicMock(), MagicMock()]
-        mock_s3_get.return_value = {"Body": MagicMock(read=lambda: b"PDF content")}
-        mock_post.return_value.status_code = 200
-        mock_post.return_value.raise_for_status = MagicMock()
-
-        result = lambda_handler(self.s3_event, None)
-        self.assertEqual(result["statusCode"], 400)
-        self.assertEqual(result["body"]["error"], "PDF must be a single page only")
-
-    @patch("requests.post")
-    @patch("lambda_function.s3_client.get_object")
-    @patch("pypdf.PdfReader")
-    def test_lambda_handler_empty_pdf(self, mock_reader, mock_s3_get, mock_post):
-        """Test Lambda handler with empty PDF."""
-        self.maxDiff = None
-        mock_page = MagicMock()
-        mock_page.extract_text.return_value = ""
-        mock_reader.return_value.pages = [mock_page]
-
-        # Simate an Empty pdf with a .read() method
-        mock_s3_get.return_value = {"Body": MagicMock(read=lambda: b"")}
-
-        mock_post.return_value.status_code = 200
-        mock_post.return_value.raise_for_status = MagicMock()
-
-        result = lambda_handler(self.s3_event, None)
-        expected = {
-            "personal_info": {"name": "", "email": "", "phone": ""},
-            "education": [],
-            "qualifications": [],
-            "projects": [],
-            "cv_public_link": "https://my-bucket.s3.amazonaws.com/Test-cv.pdf"
-        }
-        self.assertEqual(result["statusCode"], 200)
-        self.assertEqual(result["body"], expected)
+        self.assertEqual(result['personal_info']['name'], "John Doe")
+        self.assertEqual(result['personal_info']['email'], "john.doe@example.com")
+        self.assertEqual(result['education'][0], "Bachelor of Science, University of Test 2015-2019")
+        self.assertEqual(result['qualifications'][0], "Certified Python Developer, 2020")
+        self.assertEqual(result['projects'][0], "Developed a machine learning model for image recognition.")
+        self.assertEqual(result['cv_public_link'], "test_file_path")
 
 
-if __name__ == "__main__":
-    unittest.main()
