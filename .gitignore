@@ -29,6 +29,13 @@ override.tf.json
 *.bak
 *.backup
 
+# Secrets
+aws-key.txt
+google-credentials.json
+
 # Miscellaneous
+lambda_function.zip
+lambda_get_presigned_url.zip
+
 .DS_Store  # macOS-specific
 
