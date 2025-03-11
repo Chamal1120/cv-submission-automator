@@ -1,5 +1,3 @@
-# WIP
-
 # CV submission automater
 
 CV submission automater is a job application processing pipeline developed for the Metana Software Enginnering Intern (RnD) assignment. This automates the complete pipeline from the:
@@ -9,8 +7,135 @@ CV submission automater is a job application processing pipeline developed for t
 5. Sending a `processing done` response to the recruting company
 6. And sending a follow up email back to the candidate
 
-# Content
-
 # Tech Stack
 
-#  
+1. Frontend - React (bootsrapped with vite)
+2. Backend - Python (Lambda function)
+3. Middleman - Python (Lambda function)
+4. Infrastructure  - Amazon Web Services (AWS)
+5. CI/CD - AWS Codepipeline and Codebuild
+6. Infra-management - Terraform
+7. VCS - Git and Github
+8. Testing - Pytest, Vitest (WIP)
+
+# Deployment Instructions
+
+#### Prerequisites
+
+1. AWS IAM user with following permissions
+
+```
+AmazonAPIGatewayAdministrator
+AmazonS3FullAccess
+AmazonSESFullAccess
+AmazonSSMFullAccess
+AWSCodeBuildAdminAccess
+AWSCodePipeline_FullAccess
+AWSLambda_FullAccess
+CloudWatchLogsFullAccess
+CodeStarAccessCustom
+IAMFullAccess
+KMSAccessCustom
+```
+
+##### Codestar custom inline policy
+```
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Sid": "ConnectionsFullAccess",
+			"Effect": "Allow",
+			"Action": [
+				"codeconnections:CreateConnection",
+				"codeconnections:DeleteConnection",
+				"codeconnections:UseConnection",
+				"codeconnections:GetConnection",
+				"codeconnections:ListConnections",
+				"codeconnections:ListInstallationTargets",
+				"codeconnections:GetInstallationUrl",
+				"codeconnections:StartOAuthHandshake",
+				"codeconnections:UpdateConnectionInstallation",
+				"codeconnections:GetIndividualAccessToken",
+				"codeconnections:TagResource",
+				"codeconnections:ListTagsForResource",
+				"codeconnections:UntagResource"
+			],
+			"Resource": "*"
+		}
+	]
+}
+```
+
+##### KMS custom inline policy
+```
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Effect": "Allow",
+			"Action": [
+				"kms:Encrypt",
+				"kms:Decrypt",
+				"kms:GenerateDataKey*",
+				"kms:DescribeKey",
+				"kms:CreateKey",
+				"kms:ListKeys",
+				"kms:CreateAlias"
+			],
+			"Resource": "*"
+		}
+	]
+}
+```
+
+1. Fork, clone and cd into the repo:
+```bash
+git clone "your-fork's-git-url"
+cd <your-fork's-name>
+```
+
+2. zip backend and middleman codes:
+```bash
+cd backend
+mkdir package
+pip install --target=package -r requirements.txt
+cp -r lambda_function.py models/ utils/ package/
+cd package
+zip -r ..//lambda_function.zip && cd ../..
+
+cd middleman 
+mkdir package
+pip install --target=package -r requirements.txt
+cp -r get_presigned_url.py models/ utils/ package/
+cd package
+zip -r ..//lambda_get_presigned_url.zip && cd ..
+```
+
+2. Go to terraform dir and create the variables.tfvars file as follows:
+# terraform.tfvars
+aws_region           = "preffered-region"
+github_owner         = "github-user-name-of-the-git-repo"
+github_repo          = "fork's-name"
+github_token         = "gh-PAT-token"
+github_webhook_secret = "put-a-unique-password-here"
+
+2. Init terraform:
+```bash
+cd terraform
+terraform init
+```
+4. Deploy the infra:
+```bash
+terraform validate
+terraform plan --out="tfplan"
+terraform apply "tfplan"
+```
+
+4. Go AWS Codepipeline console > settings > connections and verify the codestar connection.
+
+5. Push the code to online git repo:
+```bash
+git push -u origin main
+```
+
+#### Thank You
