@@ -12,6 +12,9 @@ jobs:
     # Start an ubuntu  instance
     runs-on: ubuntu-latest
 
+    env:
+      SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
+
     steps:
 
       # Get the code from main
