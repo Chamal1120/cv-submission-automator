@@ -7,7 +7,7 @@ CV submission automater is a job application processing pipeline developed for t
 5. Sending a `processing done` response to the recruting company
 6. And sending a follow up email back to the candidate
 
-
+## Tech Stack
 
 1. Frontend - React (bootsrapped with vite)
 2. Backend - Python (Lambda function)
@@ -15,10 +15,10 @@ CV submission automater is a job application processing pipeline developed for t
 4. Infrastructure  - Amazon Web Services (AWS)
 5. SendGrid - Email Service
 6. Google sheets api - To write to google sheets
-5. CI/CD - AWS Codepipeline and Codebuild
-6. Infra-management - Terraform
-7. VCS - Git and Github
-8. Testing - Pytest, Vitest (WIP)
+7. CI/CD - AWS Codepipeline and Codebuild
+8. Infra-management - Terraform
+9. VCS - Git and Github
+10. Testing - Pytest, Vitest (WIP)
 
 ## Deployment Instructions
 
@@ -89,6 +89,8 @@ KMSAccessCustom (refer the custom policy)
 	]
 }
 ```
+
+#### Steps
 
 1. Fork, clone and cd into the repo:
 ```bash
