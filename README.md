@@ -7,7 +7,7 @@ CV submission automater is a job application processing pipeline developed for t
 5. Sending a `processing done` response to the recruting company
 6. And sending a follow up email back to the candidate
 
-## Tech Stack
+
 
 1. Frontend - React (bootsrapped with vite)
 2. Backend - Python (Lambda function)
@@ -100,14 +100,14 @@ cd <your-fork's-name>
 ```bash
 cd backend
 mkdir package
-pip install --target=package -r requirements.txt
+uv pip install --target=package -r requirements.txt
 cp -r lambda_function.py models/ utils/ package/
 cd package
 zip -r ..//lambda_function.zip && cd ../..
 
 cd middleman 
 mkdir package
-pip install --target=package -r requirements.txt
+uv pip install --target=package -r requirements.txt
 cp -r get_presigned_url.py models/ utils/ package/
 cd package
 zip -r ..//lambda_get_presigned_url.zip && cd ..

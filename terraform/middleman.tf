@@ -9,10 +9,11 @@ phases:
     commands:
       - echo "Installing dependencies..."
       - pip install --upgrade pip
+      - pip install uv
   build:
     commands:
       - echo "Building middleman Lambda package..."
-      - pip install -r middleman/requirements.txt -t middleman/package/
+      - uv pip install -r middleman/pyproject.toml -t middleman/package/
       - cp middleman/get_presigned_url.py middleman/package/
       - cd middleman/package
       - zip -r ../../lambda_get_presigned_url.zip .
