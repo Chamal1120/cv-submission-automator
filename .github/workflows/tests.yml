@@ -18,17 +18,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Setup python
-      - uses: actions/setup-python@v5
+      # Setup python and uv
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: "Set up Python"
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.13'
-          cache: 'pip' # caching pip dependencies
+          python-version-file: "backend/.python-version"
 
       # Install dependencies
       - name: Install Deps
-        run: cd backend && pip install -r requirements-dev.txt
+        run: cd backend && uv sync --all-extras --dev
 
       # Run the tests
       - name: Run tests
-        run: cd backend && pytest tests/test_cv_parser.py -v
+        run: cd backend && uv pytest tests/ -v
 
