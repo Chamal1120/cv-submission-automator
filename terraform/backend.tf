@@ -18,11 +18,12 @@ phases:
           --ciphertext-blob fileb://google-credentials.json.encrypted \
           --output text \
           --query Plaintext | base64 --decode > ./package/google-credentials.json
+      - pip install uv
 
   build:
     commands:
       - echo "Building backend package"
-      - pip install --target=package -r requirements.txt
+      - uv pip install --target=package -r pyproject.toml
       - cp -r lambda_function.py models/ utils/ package/
       - cd package
       - zip -r ../lambda_function.zip .
@@ -88,6 +89,13 @@ resource "aws_lambda_function" "cv_parser" {
   memory_size      = 256
   filename         = "../backend/lambda_function.zip"
   source_code_hash = filebase64sha256("../backend/lambda_function.zip")
+
+    environment {
+    variables = {
+      SENDGRID_API_KEY  = var.sendgrid_api_key
+      ENVIRONMENT       = "production"
+    }
+  }
 }
 
 # S3 Trigger

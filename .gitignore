@@ -38,4 +38,4 @@ lambda_function.zip
 lambda_get_presigned_url.zip
 
 .DS_Store  # macOS-specific
-
+new/

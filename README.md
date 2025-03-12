@@ -13,6 +13,8 @@ CV submission automater is a job application processing pipeline developed for t
 2. Backend - Python (Lambda function)
 3. Middleman - Python (Lambda function)
 4. Infrastructure  - Amazon Web Services (AWS)
+5. SendGrid - Email Service
+6. Google sheets api - To write to google sheets
 5. CI/CD - AWS Codepipeline and Codebuild
 6. Infra-management - Terraform
 7. VCS - Git and Github
@@ -27,15 +29,14 @@ CV submission automater is a job application processing pipeline developed for t
 ```
 AmazonAPIGatewayAdministrator
 AmazonS3FullAccess
-AmazonSESFullAccess
 AmazonSSMFullAccess
 AWSCodeBuildAdminAccess
 AWSCodePipeline_FullAccess
 AWSLambda_FullAccess
 CloudWatchLogsFullAccess
-CodeStarAccessCustom
 IAMFullAccess
-KMSAccessCustom
+CodeStarAccessCustom (refer the custom policy)
+KMSAccessCustom (refer the custom policy)
 ```
 
 ##### Codestar custom inline policy
@@ -114,6 +115,11 @@ zip -r ..//lambda_get_presigned_url.zip && cd ..
 
 2. Go to terraform dir and create the variables.tfvars file as follows:
 
+```bash
+cd ..
+cd terraform
+```
+
 ```txt
 # terraform.tfvars
 aws_region           = "preffered-region"
@@ -124,8 +130,8 @@ github_webhook_secret = "put-a-unique-password-here"
 ```
 
 2. Init terraform:
+
 ```bash
-cd terraform
 terraform init
 ```
 4. Deploy the infra:
@@ -135,7 +141,7 @@ terraform plan --out="tfplan"
 terraform apply "tfplan"
 ```
 
-4. Go AWS Codepipeline console > settings > connections and verify the codestar connection.
+4. Go to AWS Codepipeline console > settings > connections and verify the codestar connection.
 
 5. Push the code to online git repo:
 ```bash

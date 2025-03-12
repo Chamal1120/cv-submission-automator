@@ -1,0 +1,23 @@
+[project]
+name = "backend"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "boto3>=1.37.11",
+    "google-api-python-client>=2.163.0",
+    "google-auth>=2.38.0",
+    "google-auth-httplib2>=0.2.0",
+    "google-auth-oauthlib>=1.2.1",
+    "pypdf>=5.3.1",
+    "sendgrid>=6.11.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "black>=25.1.0",
+    "pylint>=3.3.5",
+    "pytest>=8.3.5",
+    "dotenv>=0.9.9",
+]

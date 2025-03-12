@@ -26,3 +26,8 @@ variable "github_webhook_secret" {
   sensitive   = true
 }
 
+variable "sendgrid_api_key" {
+  description = "The API key for SendGrid"
+  type        = string
+  sensitive   = true
+}
