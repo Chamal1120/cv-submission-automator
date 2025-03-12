@@ -10,11 +10,10 @@ const UploadForm: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
   const [dragging, setDragging] = useState<boolean>(false);
   const [uploading, setUploading] = useState<boolean>(false);
+  const [uploadSuccess, setUploadSuccess] = useState<boolean>(false);
 
   const allowedTypes = [
     "application/pdf",
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    "application/msword",
   ];
 
   const handleFileSelection = (selectedFile: File | null) => {
@@ -89,6 +88,7 @@ const UploadForm: React.FC = () => {
       const url = await getPresignedUrl(file);
       const fileUrl = await uploadFileToS3(file, url);
       console.log("File uploaded successfully:", fileUrl);
+      setUploadSuccess(true);
       alert(`File uploaded! URL: ${fileUrl}`);
     } catch (e) {
       console.error(e);
@@ -100,38 +100,44 @@ const UploadForm: React.FC = () => {
 
   return (
     <div className="max-w-xl mx-auto py-10">
-      <label
-        className={`flex flex-col justify-center items-center w-full h-32 px-4 transition border-2 border-dashed rounded-md cursor-pointer focus:outline-none 
+      {!uploadSuccess ? (
+        <>
+          <label
+            className={`flex flex-col justify-center items-center w-full h-32 px-4 transition border-2 border-dashed rounded-md cursor-pointer focus:outline-none 
           ${dragging ? "bg-gray-600 border-gray-400" : "bg-gray-700 border-gray-800 hover:border-gray-400"}`}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-      >
-        <span className="flex items-center space-x-2">
-          <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-gray-200" fill="none" viewBox="0 0 24 24"
-            stroke="currentColor" strokeWidth="2">
-            <path strokeLinecap="round" strokeLinejoin="round"
-              d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-          </svg>
-          <span className="font-medium text-gray-200">
-            {file ? file.name : "Drop files to Attach, or"}
-            <span className="text-white underline pl-2">browse</span>
-          </span>
-        </span>
-        <input type="file" name="file_upload" className="hidden" onChange={(e) => handleFileSelection(e.target.files?.[0] || null)} />
-      </label>
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+          >
+            <span className="flex items-center space-x-2">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-gray-200" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round"
+                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+              </svg>
+              <span className="font-medium text-gray-200">
+                {file ? file.name : "Drop files to Attach, or"}
+                <span className="text-white underline pl-2">browse</span>
+              </span>
+            </span>
+            <input type="file" name="file_upload" className="hidden" onChange={(e) => handleFileSelection(e.target.files?.[0] || null)} />
+          </label>
 
-      {file && (
-        <p className="text-center text-gray-300 mt-2">Selected file: {file.name}</p>
+          {file && (
+            <p className="text-center text-gray-300 mt-2">Selected file: {file.name}</p>
+          )}
+
+          <button
+            onClick={handleUpload}
+            className="px-4 py-2 mt-4 text-white bg-blue-600 rounded disabled:bg-gray-400"
+            disabled={!file || uploading}
+          >
+            {uploading ? "Uploading..." : "Submit"}
+          </button>
+        </>
+      ) : (
+        <h2 className="text-center text-2xl text-green-300">Your CV has submmited!</h2>
       )}
-
-      <button
-        onClick={handleUpload}
-        className="px-4 py-2 mt-4 text-white bg-blue-600 rounded disabled:bg-gray-400"
-        disabled={!file || uploading}
-      >
-        {uploading ? "Uploading..." : "Upload"}
-      </button>
     </div>
   );
 };
