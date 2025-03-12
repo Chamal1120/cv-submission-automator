@@ -19,6 +19,12 @@ jobs:
       AWS_REGION: ${{ secrets.AWS_REGION }}
 
     steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
 
       # Get the code from main
       - name: Checkout code
@@ -36,14 +42,6 @@ jobs:
       # Install dependencies
       - name: Install Deps
         run: cd backend && uv sync --all-extras --dev
-
-      # Setup AWS
-      - name: Configure AWS CLI
-        run: |
-          pip install awscli
-          aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
-          aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
-          aws configure set region $AWS_REGION
 
       # Run the tests
       - name: Run tests
