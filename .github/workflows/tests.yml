@@ -33,5 +33,5 @@ jobs:
 
       # Run the tests
       - name: Run tests
-        run: cd backend && uv pytest tests/ -v
+        run: cd backend && uv run pytest tests/ -v
 
