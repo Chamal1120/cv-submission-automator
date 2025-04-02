@@ -1,24 +1,47 @@
+<div align="center">
+
 # CV submission automater
 
-CV submission automater is a job application processing pipeline developed for the Metana Software Enginnering Intern (RnD) assignment. This automates the complete pipeline from the:
-1. Candidate submitting CV, 
-2. Extracting relevant details from it
-4. Saving them in a google sheet
-5. Sending a `processing done` response to the recruting company
-6. And sending a follow up email back to the candidate
+-- An Open Source Automated CV Processing Pipeline --
 
-## Tech Stack
+</div>
 
-1. Frontend - React (bootsrapped with vite)
-2. Backend - Python (Lambda function)
-3. Middleman - Python (Lambda function)
-4. Infrastructure  - Amazon Web Services (AWS)
-5. SendGrid - Email Service
-6. Google sheets api - To write to google sheets
-7. CI/CD - AWS Codepipeline and Codebuild
-8. Infra-management - Terraform
-9. VCS - Git and Github
-10. Testing - Pytest, Vitest (WIP)
+## Why this exists?
+So many start up companies that I applied didn't have a proper CV processing pipeline which makes candidates un-aware of what happened to their application and sometimes recruiter doesn't even have a proper way to query these applications which makes this process tedious for both candidates and recruiters.
+
+This aims to solve that issue by providing a configurable CV processing pipeline for companies that doesn't have time to create their own from scratch. So if you're a recruiter, you can set this up in your infrastructure (preferably AWS) in seconds and start managing those 1000+ CVs flowing to you like a boss.
+
+Plus this is Open Source and licensed under MIT, So you can do whatever the customization you want on top of this and use.
+
+## Little bit about this idea
+Initially this was developed as an Internship assignment for Metana Intern Software Engineer position. Then fell in love with this idea and asked from them if I could use this and develop it into a configurable open source application which anyone can use.
+
+* So, huge thank to **[Metana Company](https://metana.io)** for allowing me to develop this into a FOSS product.
+
+## What this does
+1. Collects candidates' CVs from an intuitive frontend.
+2. Extracts relevant details (via RegEx).
+3. Appends data to a recruiter’s Google Sheet.
+4. Notifies the recruiter once processing is complete.
+5. Sends follow-up emails to candidates.
+
+## Upcoming improvements (Help is needed)
+1. Sending follow up emails in candidates' convenient timezone defined by the recruiters.
+2. Adding a method to keep track on the CV progress and send mails to candidates when there is an update. 
+2. Adding AI based CV detials extraction as an option for the recuiters.
+3. Implement an MCP (Model-Context-Protocol) to bridge the result spreadsheet with an AI chatbot, so the recruiters can query the candidates CVs using human langauge instead of manually searching through the spreadsheet.
+
+## Technologies used
+1. **Frontend** - React (bootsrapped with vite)
+2. **Backend** - Python (Lambda function)
+3. **Middleman** - Python (Lambda function)
+4. **Infrastructure**  - Amazon Web Services (AWS)
+5. **Email Service** - SendGrid, AWS SES
+6. **Google sheets api** - To write to google sheets
+7. **CI/CD** - AWS Codepipeline and Codebuild
+8. **Infra-management** - Terraform
+9. **VCS** - Git and GitHub
+10. **Testing** - Pytest
 
 ## Deployment Instructions
 
@@ -150,4 +173,6 @@ terraform apply "tfplan"
 git push -u origin main
 ```
 
-## Thank You
+## Contributing
+This is an Open Source Project licensed under **MIT License** and any contribution is warmly welcome.
+
