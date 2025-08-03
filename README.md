@@ -1,22 +1,17 @@
 <div align="center">
 
 # CV submission automater
-
 -- An Open Source Automated CV Processing Pipeline --
 
 </div>
 
-## Why this exists?
-So many start up companies that I applied didn't have a proper CV processing pipeline which makes candidates un-aware of what happened to their application and sometimes recruiter doesn't even have a proper way to query these applications which makes this process tedious for both candidates and recruiters.
+## Why I made this?
+Many startup companies don't have time to implement their own custom pipeline for smooth recruiting workflow that can satisfy both them and the recruiter.
 
-This aims to solve that issue by providing a configurable CV processing pipeline for companies that doesn't have time to create their own from scratch. So if you're a recruiter, you can set this up in your infrastructure (preferably AWS) in seconds and start managing those 1000+ CVs flowing to you like a boss.
+This aims to solve that by providing a FOSS boilerplate that can easily implemented on their infrastucture. This is made specially keeping cost efficiency in mind.
 
-Plus this is Open Source and licensed under MIT, So you can do whatever the customization you want on top of this and use.
-
-## Little bit about this idea
-Initially this was developed as an Internship assignment for Metana Intern Software Engineer position. Then fell in love with this idea and asked from them if I could use this and develop it into a configurable open source application which anyone can use.
-
-* So, huge thank to **[Metana Company](https://metana.io)** for allowing me to develop this into a FOSS product.
+## Preview
+![Preview](previews/preview_01.webp)
 
 ## What this does
 1. Collects candidates' CVs from an intuitive frontend.
@@ -25,11 +20,12 @@ Initially this was developed as an Internship assignment for Metana Intern Softw
 4. Notifies the recruiter once processing is complete.
 5. Sends follow-up emails to candidates.
 
-## Upcoming improvements (Help is needed)
-1. Sending follow up emails in candidates' convenient timezone defined by the recruiters.
-2. Adding a method to keep track on the CV progress and send mails to candidates when there is an update. 
-2. Adding AI based CV detials extraction as an option for the recuiters.
-3. Implement an MCP (Model-Context-Protocol) to bridge the result spreadsheet with an AI chatbot, so the recruiters can query the candidates CVs using human langauge instead of manually searching through the spreadsheet.
+## TODO
+- [ ] Sending follow up emails in candidates' convenient timezone defined by the recruiters.
+- [ ] Adding a method to keep track on the CV progress and send mails to candidates when there is an update. 
+- [ ] Adding AI based CV details extraction as an option for the recruiters.
+- [ ] Implement an MCP (Model-Context-Protocol) to bridge the result spreadsheet with an AI chatbot, so the recruiters can query the candidates CVs using human language instead of manually searching through the spreadsheet.
+
 
 ## Technologies used
 1. **Frontend** - React (bootsrapped with vite)
@@ -44,7 +40,6 @@ Initially this was developed as an Internship assignment for Metana Intern Softw
 10. **Testing** - Pytest
 
 ## Deployment Instructions
-
 #### Prerequisites
 
 1. AWS IAM user with following permissions
@@ -173,6 +168,5 @@ terraform apply "tfplan"
 git push -u origin main
 ```
 
-## Contributing
-This is an Open Source Project licensed under **MIT License** and any contribution is warmly welcome.
-
+## License
+This is licensed under MIT license.
